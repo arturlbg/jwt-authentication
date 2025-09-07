@@ -9,6 +9,12 @@ This project is a clean, modern template for building a JWT (JSON Web Token) aut
 
 The code is organized with a clear separation of concerns, is REPL-friendly, and uses a minimal, best-in-class set of libraries to get the job done without unnecessary complexity.
 
+## Diagram
+
+<img width="1853" height="1242" alt="image" src="https://github.com/user-attachments/assets/2dfee85e-58f0-4f64-be63-0b036c7067f5" />
+
+
+
 ## Key Features
 
 *   **Modern Clojure Stack**: Built with `http-kit` for performance, `reitit` for data-driven routing, and `buddy` for rock-solid security.
