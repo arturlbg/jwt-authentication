@@ -10,7 +10,7 @@
     (ring/router
       [["/signup"
         {:post
-         (fn [{:keys [body]}]
+         (fn [{:keys [body-]}]
            (let [username (:username body)
                  password (:password body)]
              (if (or (empty? username) (empty? password))
