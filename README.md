@@ -18,42 +18,36 @@ This project is a template for building a JWT (JSON Web Token) authentication mi
 
 ## Key Features
 
-*   **Clojure Stack**: Built with `http-kit`, `reitit` for routing, and `buddy` for security.
-*   **In-Memory (for now)**: Uses a simple in-memory Clojure `atom` to store active refresh tokens. This makes the template easy to run and test out-of-the-box without any external database setup.
-*   **Database Ready**: The in-memory store in `db.clj` is intentionally simple and can be trivially swapped for a persistent database like Redis or PostgreSQL by implementing the same simple functions (`add-token!`, `remove-token!`, `token-exists?`).
-
-## Installation
-
-This project is built with [Leiningen](https://leiningen.org/).
-
-Add the following dependency to your `project.clj` file if you were to use it as a library (though it's intended as a template):
-
-```clojure
-[jwt-auth-clj "1.0.0"]
-```
+*   **Docker**: A fully containerized setup using **Docker Compose**. The entire stack (Clojure App, PostgreSQL, Redis) starts with a `docker compose up`.
+*   **Persistent User Storage**: User accounts, including usernames and securely hashed passwords (using `bcrypt`), are stored in a **PostgreSQL** database.
+*   **Session Management**: Active refresh tokens are managed in a **Redis** set. This is an in-memory solution for validating tokens and enables instant, reliable session revocation upon user logout.
+*   **Complete Authentication Flow**: Implements the full authentication lifecycle, including user signup, login, protected route access, token refreshing, and logout.
 
 ## Getting Started
 
-Follow these steps to get the authentication service running locally.
+This project is designed to run with Docker. All you need are Docker and Docker Compose installed.
+
+### Prerequisites
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine + Docker Compose for Linux)
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/jwt-auth-clj.git
-cd jwt-auth-clj
+git clone https://github.com/your-username/jwt-authentication.git
+cd jwt-authentication
 ```
 
-### 2. Install Dependencies
+### 2. Configure Environment Variables
 
-Leiningen will handle this automatically on the first run, but you can fetch them manually:
+The application uses a `.env` file for secrets and connection strings. A template is provided.
+
+**a. Copy the example file:**
 ```bash
-lein deps
+cp .env.example .env
 ```
 
-### 3. Configure Environment Variables
-
-**a. Generate secure secrets:**
-Open the newly created `.env` file. You need to generate two long, random, and **unique** strings for the secrets. You can use `openssl` for this:
+**b. Generate secure JWT secrets:**
+You need to generate two long, random, and unique strings. The `openssl` command is a great way to do this. Run it twice:
 ```bash
 # Generate the first secret
 openssl rand -base64 32
@@ -62,28 +56,44 @@ openssl rand -base64 32
 openssl rand -base64 32
 ```
 
-**b. Update your `.env` file** with the generated values:
+**c. Update your `.env` file:**
+Open the newly created `.env` file and paste in the secrets you generated. **The `DATABASE_URL` and `REDIS_URL` are already correctly configured for the Docker network and should not be changed for local development.**
+
 ```
 # .env
 ACCESS_TOKEN_SECRET="your-first-generated-secret-here"
 REFRESH_TOKEN_SECRET="your-second-generated-secret-here"
+DATABASE_URL="jdbc:postgresql://db:5432/auth_db?user=user&password=password"
+REDIS_URL="redis://redis:6379"
 ```
 
-### 4. Run the Application
+### 3. Build and Run the Application
 
-Start the two web servers:
+With Docker Compose, starting the entire stack is a single command:
 ```bash
-lein run
+docker-compose up --build
 ```
-You should see a message confirming the system has started:
-`System started. API on port 3000, Auth on port 4000.`
+This command will:
+1.  Build the Docker image for your Clojure application.
+2.  Download the official PostgreSQL and Redis images.
+3.  Start all three containers and connect them in a dedicated network.
+4.  Initialize the PostgreSQL database with the `users` table.
 
-### 5. Test the API
+To stop all services, press `Ctrl+C` and then run:
+```bash
+docker-compose down
+```
 
-1.  **POST /login**: Get your initial tokens.
-2.  **GET /posts**: Access a protected route using the access token.
-3.  **POST /token**: Use your refresh token to get a new access token.
-4.  **DELETE /logout**: Invalidate your refresh token.
+### 4. Test the API
+
+The easiest way to test the endpoints is with the provided `requests.rest` file and the [REST Client extension for VS Code](https://marketplace.visualstudio.com/items?itemName=humao.rest-client).
+
+The test file guides you through the entire flow:
+1.  **POST /signup**: Create a new user account.
+2.  **POST /login**: Get your initial access and refresh tokens.
+3.  **GET /posts**: Access a protected route using the access token.
+4.  **POST /token**: Use your refresh token to get a new access token.
+5.  **DELETE /logout**: Invalidate your refresh token, effectively logging out.
 
 ## API Endpoints
 
@@ -91,21 +101,21 @@ The service runs two separate servers on different ports to simulate a microserv
 
 #### Authentication Service (`http://localhost:4000`)
 
-| Method | Path        | Description                                       |
-| :----- | :---------- | :------------------------------------------------ |
-| `POST` | `/login`    | Authenticates a user and returns tokens.          |
-| `POST` | `/token`    | Issues a new access token using a refresh token.  |
-| `DELETE`| `/logout`   | Invalidates a refresh token, logging the user out.|
+| Method   | Path      | Description                                          |
+| :------- | :-------- | :--------------------------------------------------- |
+| `POST`   | `/signup` | Creates a new user account.                          |
+| `POST`   | `/login`  | Authenticates a user and returns tokens.             |
+| `POST`   | `/token`  | Issues a new access token using a refresh token.     |
+| `DELETE` | `/logout` | Invalidates a refresh token, logging the user out.   |
 
 #### API Service (`http://localhost:3000`)
 
-| Method | Path        | Description                                       |
-| :----- | :---------- | :------------------------------------------------ |
-| `GET`  | `/posts`    | A protected route that returns data for the authenticated user. Requires a valid `Authorization: Bearer <token>` header. |
-
+| Method | Path     | Description                                                                  |
+| :----- | :------- | :--------------------------------------------------------------------------- |
+| `GET`  | `/posts` | A protected route that returns data for the authenticated user. Requires a valid `Authorization: Bearer <token>` header. |
 
 ## License
 
 Copyright © 2024
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License.
