@@ -7,10 +7,12 @@
 
 This project is a template for building a JWT (JSON Web Token) authentication microservice in Clojure. It implements a standard access/refresh token flow, designed to serve as a robust starting point for your own `auth-service`.
 
+**PostgreSQL** for persistent user identity and **Redis** to store refresh tokens.
+
 
 ## Diagram
 
-<img width="1853" height="1242" alt="image" src="https://github.com/user-attachments/assets/2dfee85e-58f0-4f64-be63-0b036c7067f5" />
+<img width="699" height="1152" alt="image" src="https://github.com/user-attachments/assets/6defe2d0-fab7-4d53-8014-20aba359cd39" />
 
 
 
