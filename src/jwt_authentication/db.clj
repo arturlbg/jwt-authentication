@@ -9,6 +9,9 @@
 (defn create-user!
   "Creates a new user in the database."
   [db-conn {:keys [username password-hash]}]
+  (println {:db-conn db-conn
+            :username username
+            :password-hash password-hash})
   (sql/insert! db-conn :users {:username username :password_hash password-hash}))
 
 (defn find-user-by-username
